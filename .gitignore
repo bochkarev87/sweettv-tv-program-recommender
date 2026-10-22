@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+data/
+work/
+*.zip
+!submissions/submission_final.csv

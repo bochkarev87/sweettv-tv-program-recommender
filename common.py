@@ -1,10 +1,11 @@
 """Shared protocol: temporal split, candidate pool, ground truth, MAP@5."""
+import os
 import numpy as np
 import pandas as pd
 
 D = r'C:\Users\swaggaf0x\.cache\kagglehub\competitions\sweettv-tv-program-recommender'
 DATA = 'data'
-CUTOFF = pd.Timestamp('2020-06-01')    # train: ts < CUTOFF ; validation: CUTOFF <= ts < END
+CUTOFF = pd.Timestamp(os.environ.get('SWEET_CUTOFF', '2020-06-01'))    # train: ts < CUTOFF ; validation: CUTOFF <= ts < END
 END = pd.Timestamp('2020-07-27')       # end of the available logs
 TEST_START = pd.Timestamp('2020-07-27')  # schedule of weeks 31-42 starts here
 K = 5

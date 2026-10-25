@@ -35,6 +35,7 @@ r_pop = row(res, 'pop_all')
 r_pop28 = row(res, 'pop_28d')
 r_hist = row(res, 'hist', val['best']['hist']['params'])
 r_cbf = row(res, 'cbf')
+r_prior = row(air8, 'prior_only', 'log_n_airings')
 r_cbf2 = row(res2, 'cbf2', 'all + id2')
 r_als = row(res, 'als')
 r_svd = row(res, 'svd', val['best']['mf']['params'])
@@ -62,6 +63,7 @@ main_table = ''.join([
     trow('Popularity (#users)', 'all train', r_pop),
     trow('Popularity, last 28 d', '28-day window', r_pop28),
     trow('Own-history prior (ref.)', E(r_hist['params']).replace('half_life', 'half-life') + ' d', r_hist),
+    trow('Airing prior alone (ref.)', 'log(1+#airings in window)', r_prior),
     trow('<b>CBF</b> (required method 1)', 'TF-IDF: cat/genre/actor/dir/title/decade', r_cbf),
     trow('CBF + show-identity feature', 'identity weight 2', r_cbf2),
     trow('<b>MF: ALS</b> (required method 2a)', E(r_als['params']), r_als),

@@ -1,0 +1,9 @@
+C:\Users\swaggaf0x\sweettv\09_unit_checks.py:30: SyntaxWarning: "\s" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\s"? A raw string is also an option.
+  t = pd.read_csv(f'{D}\submission.csv', dtype=str)
+AP@5 slide example: X=0.917 (slide 0.917), Y=0.533 (slide 0.533)  OK
+AP@5 hits at ranks 1,3,4,5 of 5 relevant = 0.6433  OK
+train ts max 2020-05-31 23:59:57 < cutoff 2020-06-01 <= validation ts min 2020-06-01 00:00:12  OK
+interactions: no tv_show_id=0, min overlap 60 s  OK
+all validation targets are inside the candidate pool (1244 users)  OK
+submission.csv : 1260 users, 5 distinct programs each, all in the weeks 31-42 schedule  OK
+submission_v2_airprior.csv : 1260 users, 5 distinct programs each, all in the weeks 31-42 schedule  OK

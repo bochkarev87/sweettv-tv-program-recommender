@@ -52,3 +52,7 @@ b = h.iloc[0]
 m = re.search(r'(\w+) w_hist=([\d.]+) w_mf=([\d.]+) w_prior=([\d.]+)', b['params'])
 pickle.dump({'prior': m.group(1), 'w_hist': float(m.group(2)), 'w_mf': float(m.group(3)), 'w_prior': float(m.group(4)),
              'val': b.to_dict(), 'baseline': base.to_dict()}, open(f'{DATA}/final_cfg_air{TAG}.pkl', 'wb'))
+
+pickle.dump({'params': b['params'], 'final': store[('hybrid_air', b['params'], False)],
+             'baseline_params': base['params'], 'baseline': store[('hybrid_air', base['params'], False)]},
+            open(f'{DATA}/val_recs_air{TAG}.pkl', 'wb'))

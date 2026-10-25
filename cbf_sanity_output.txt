@@ -1,0 +1,17 @@
+PROTOCOL: train < 2020-06-01 | validation 2020-06-01 -> 2020-07-27
+eval users: 1244 (of 1260 ) | cold users (no train history): 7
+candidate pool size: 5732 | pool items seen in train: 2259
+truth items in pool: 1.000
+truth items already watched by that user in train (repeat viewing): 0.674
+truth items never seen in train by anyone (cold items): 0.123
+avg truth size per user: 5.00
+cbf_id     id_weight=0                    excl_seen=False MAP@5 A=0.0019 B=0.0026 All=0.0022 HR@5=0.019
+cbf_id     id_weight=2                    excl_seen=False MAP@5 A=0.0039 B=0.0045 All=0.0042 HR@5=0.031
+cbf_id     id_weight=5                    excl_seen=False MAP@5 A=0.0078 B=0.0103 All=0.0091 HR@5=0.056
+cbf_id     id_weight=20                   excl_seen=False MAP@5 A=0.1711 B=0.1806 All=0.1759 HR@5=0.617
+cbf_id     id_weight=100                  excl_seen=False MAP@5 A=0.2755 B=0.2827 All=0.2791 HR@5=0.814
+
+user 8431897575013155337 | distinct shows watched in train: 146
+CBF top-5 (id, category, already watched): [(90079323, 'Фильмы', True), (90077028, 'Фильмы', True), (90076668, 'Фильмы', True), (90071046, 'Фильмы', False), (90076970, 'Фильмы', True)]
+truth (id, category): [(90080923, 'Фильмы'), (1100411, 'Познавательное'), (90057593, 'Фильмы'), (90070520, 'Фильмы'), (90059599, 'Фильмы')]
+cosine score of truth items: [0.379 0.138 0.417 0.373 0.377] | cosine score of CBF top-5: [0.457 0.455 0.455 0.454 0.453]

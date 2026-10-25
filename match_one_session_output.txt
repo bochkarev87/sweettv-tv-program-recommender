@@ -1,0 +1,12 @@
+LOG SESSION: channel 3 | start 2020-04-10 16:48:21 | stop 2020-04-10 17:16:54
+
+SCHEDULE rows on this channel around the session (tv_show_id=0 means irrelevant):
+                 ps                  pe  duration  tv_show_id           tv_show_title
+2020-04-10 15:25:00 2020-04-10 16:45:00      4800    10002451 Т/с 'Великолепный век'.
+2020-04-10 16:45:00 2020-04-10 17:10:00      1500     2400480                    ТСН.
+2020-04-10 17:10:00 2020-04-10 18:00:00      3000    10002451 Т/с 'Великолепный век'.
+
+PIPELINE stored for this session (user, show, overlap_sec):
+ tv_show_id  overlap_sec
+    2400480         1299
+   10002451          414

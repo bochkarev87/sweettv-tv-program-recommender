@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>sweet.tv TV program recommendation - midterm report</title>
+<style>
+@page { size: A4; margin: 11mm 12mm; }
+body { font-family: "Times New Roman", serif; font-size: 8.9pt; line-height: 1.22; color: #111; }
+h1 { font-size: 14.5pt; text-align: center; margin: 0 0 3px; }
+h2 { font-size: 10pt; margin: 7px 0 2px; border-bottom: 0.6px solid #888; }
+h3 { font-size: 9pt; margin: 5px 0 1px; }
+p { margin: 2px 0 3px; text-align: justify; }
+.meta { text-align: center; font-size: 8.5pt; margin-bottom: 4px; }
+.abs { margin: 3px 14px; font-size: 8.6pt; }
+table.t { border-collapse: collapse; width: 100%; margin: 3px 0; }
+table.t th, table.t td { border: 0.5px solid #777; padding: 1px 3px; text-align: left; vertical-align: top; }
+table.t th { background: #eee; }
+.small, .small td, .small th { font-size: 6.9pt; line-height: 1.12; }
+td.hit { background: #d9f2d9; }
+ul { margin: 1px 0 2px 14px; padding: 0; } li { margin: 0; }
+.todo { background: #fff3a0; border: 1.5px dashed #b58900; padding: 3px 5px; margin: 3px 0; font-size: 8.4pt; }
+img.shot { width: 100%; border: 0.5px solid #999; }
+.fig { font-size: 7.8pt; text-align: center; }
+.ref { font-size: 8.2pt; page-break-before: always; } .ref p { text-align: left; margin: 1px 0; }
+code { font-size: 8pt; }
+</style></head><body>
+
+<h1>Repeat-Viewing-Aware Top-5 TV Program Recommendation on SWEET.TV: CBF, Matrix Factorization and a Schedule Prior</h1>
+<div class="meta">Student: Ilya Bochkarev (Бочкарев Илья) &nbsp; Team: Individual &nbsp; Email: ilya.bochkarev87@outlook.com &nbsp; Date: 2026-10-25<br>
+Assignment: LLM4Rec Midterm Quiz &mdash; TV Program Recommendation &nbsp;|&nbsp; Kaggle: IlyaBochkarev &nbsp;|&nbsp;
+GitHub: <a href="https://github.com/bochkarev87/sweettv-tv-program-recommender">github.com/bochkarev87/sweettv-tv-program-recommender</a></div>
+
+<div class="abs"><b>Abstract.</b> We rank five TV programs for each of 1,260 SWEET.TV users for weeks 31&ndash;42 of 2020 from viewing logs and channel schedules.
+Logs are joined to the schedule by channel-time overlap, and popularity, content-based filtering (CBF), implicit ALS and PureSVD are compared under one temporal split (train before 1 June, validate 1 June&ndash;26 July) with MAP@5.
+The final hybrid combines a decayed own-history score, SVD and a schedule-based airing prior; it reaches validation MAP@5 {{H2_ALL}} (popularity {{POP_ALL}}) and a Kaggle private score of 0.30404.
+Because 67% of target programs were already watched by the same user, personal history and schedule exposure matter far more than content metadata (CBF {{CBF_ALL}}).</div>
+<div class="meta"><i>Index Terms</i> &mdash; TV recommendation, implicit feedback, matrix factorization, content-based filtering, temporal validation</div>
+
+<h2>1. Introduction</h2>
+<p><b>Problem.</b> Given SWEET.TV viewing sessions (user, channel, start, stop; 9 Mar&ndash;26 Jul 2020) and channel schedules with program metadata, output an ordered Top-5 of <code>tv_show_id</code> for every test user; quality is MAP@5 against the programs the user preferred in weeks 31&ndash;42 [5].
+<b>Motivation.</b> Live TV has a fixed catalogue of recurring programs, so a recommender must decide between &ldquo;your usual shows&rdquo; and discovery, and must know what will actually be on air.
+<b>Example.</b> For a typical validation user (234 programs watched) the final model returns news and talk shows the user watched most (e.g. 240081 &ldquo;Факты. День.&rdquo;, 6500479 &ldquo;Мир наизнанку&rdquo;) and hits {{HITS_TYP_H2}} of 5 target programs (AP@5 {{AP_TYP_H2}}; the v1 hybrid hits {{HITS_TYP_H1}}, AP@5 {{AP_TYP_H1}}; Table 3).
+<b>Contributions.</b> (i) A documented log&ndash;schedule matching rule and a leakage-free temporal protocol shared by all methods; (ii) a comparison of popularity, CBF, ALS and SVD with a tuned hybrid, including negative results (CBF); (iii) evidence that a schedule-exposure prior helps and a sensitivity check on the validation horizon.</p>
+
+<h2>2. Related Work</h2>
+<p>Implicit-feedback matrix factorization with confidence weights (ALS) was introduced by Hu et&nbsp;al. [1]; Koren et&nbsp;al. [3] survey factorization models; Cremonesi et&nbsp;al. [2] show that a plain truncated SVD (&ldquo;PureSVD&rdquo;) is a strong top-N baseline. Content-based recommendation builds a user profile from item attributes and ranks items by similarity [4]. MAP@K follows the course definition with the min(K,|R<sub>u</sub>|) normalisation [6]. <b>Alternatives considered:</b> association rules &mdash; not implemented, because with few co-watched pairs per user they were expected to add little over popularity and time was limited; personalized PageRank &mdash; not implemented for the same reason (it remains a natural extension); BPR/two-tower models &mdash; out of scope for the available time.</p>
+
+<h2>3. Method</h2>
+<p><b>Approach.</b> We (1) build user&ndash;program interactions by joining logs to the schedule, (2) split by time, (3) score every program that is on air in the target window with each method, (4) blend z-scored method scores with weights chosen on a held-out half of the users, and (5) retrain on all logs and predict weeks 31&ndash;42.</p>
+<p><b>Matching rule and missing IDs.</b> A session [start, stop] on channel <i>c</i> is matched to every airing on the same channel whose interval [start, start+duration) overlaps it; a (session, program) pair is kept if the overlap is &ge;60 s (threshold chosen a priori, not tuned). Per (user, program) we sum overlap seconds and use <i>w</i>=log(1+minutes). Schedule rows with <code>tv_show_id=0</code> (irrelevant programs, 88&ndash;89% of rows) never become interactions; schedule files overlap at week boundaries and are de-duplicated on (channel, start). Result: 5,821,987 sessions &rarr; 3,742,237 interactions, 4,895 users, 4,362 programs; <b>53.0%</b> of watch time is matched to relevant programs; the rest falls on programs with <code>tv_show_id=0</code>, on the 114 of 202 logged channels that have no relevant program in the schedule (5 channels are absent from it altogether), or on overlaps shorter than 60 s. Log and schedule clocks were assumed equal: shifts of &minus;3&hellip;+3 h were tried and zero shift gave the largest share of session starts within 90 s after a program start in both March and July (3.1%/3.0% vs 2.5&ndash;2.8%) &mdash; a weak but consistent signal.</p>
+<p><b>Protocol.</b> Train: sessions before 1 June 2020; validation: 1 June&ndash;26 July (8 weeks). Candidate pool: programs with an airing in the validation window (5,732; the test pool is the 31&ndash;42 schedule, 6,646 programs). Ground truth per user: the 5 programs with the largest validation watch time (the competition asks for the 5 &ldquo;most preferred&rdquo;). Evaluation users: the 1,244 of the 1,260 submission users with validation activity (7 have no training history and get popularity). Hyper-parameters and blend weights are chosen on a random half A of users and reported on the held-out half B and on all users (seed 42). No validation or future sessions are used for training; program metadata and future schedules are provided inputs.</p>
+<p><b>Methods.</b> <i>Popularity</i>: number of distinct training users. <i>Own-history prior</i> (reference, not one of the two required methods): decayed watch time (half-life 56 d), log-scaled. <b>CBF</b>: TF-IDF blocks for category, genres, actors, director, title words and decade (weights 1/1/0.5/0.5/0.5/0.3); user profile = watch-weighted sum of program vectors, cosine ranking. <b>MF</b>: implicit ALS [1] (confidence 1+&alpha;w) and PureSVD [2] of the user&ndash;program matrix of <i>w</i>. <i>Hybrid</i>: &Sigma; w<sub>k</sub>&middot;z(S<sub>k</sub>) with per-user z-scores over the pool; <i>v2</i> adds the airing prior z(log(1+#airings of the program in the target window)), known in advance from the schedule.
+<b>Tools:</b> Python 3.14.5, pandas 3.0.6, NumPy 2.5.3, SciPy 1.18.1 (<code>svds</code>), scikit-learn 1.9.1 (<code>TfidfVectorizer</code>); ALS is our own implementation (no <code>implicit</code> package). CPU only, one Windows 11 PC. Seeds: ALS init 0, user split 42.</p>
+
+<h2>4. Experiments</h2>
+<p><b>Setup.</b> SWEET.TV competition data [5]; protocol above; MAP@5 with normalisation min(5,|R<sub>u</sub>|) [6]. Of the validation targets, 67.4% were already watched by the user in training and 12.3% were never seen in training by anyone (cold programs).</p>
+<table class="t small"><tr><th>Method</th><th>Configuration</th><th>MAP@5 (B, held-out)</th><th>MAP@5 (all)</th><th>HR@5</th><th>P@5</th><th>fit, s</th><th>rank 1,244 users, s</th></tr>
+{{MAIN_TABLE}}</table>
+<div class="fig">Table 1. Validation results (train &lt; 1 Jun, validate 1 Jun&ndash;26 Jul 2020). Configurations of ALS/SVD/history were selected on user-half A; times are single measured runs.</div>
+<p><b>Comparison with baseline.</b> The two required methods behave very differently: PureSVD ({{SVD_ALL}}) is far above popularity ({{POP_ALL}}), ALS ({{ALS_ALL}}) is below it, and CBF ({{CBF_ALL}}) is almost zero. Own history alone ({{HIST_ALL}}) already beats every single required method; the hybrid v1 reaches {{H1_ALL}} and v2 {{H2_ALL}} (held-out half B: {{H1_B}} &rarr; {{H2_B}}; without the prior at the same weights {{H2BASE_B}}). Recommending only unseen programs removes the signal: popularity {{EXPOP}}, history {{EXHIST}}, SVD {{EXSVD}} (MAP@5, all users).</p>
+<table class="t small"><tr><th>Check</th><th>without airing prior</th><th>with airing prior</th></tr>
+<tr><td>8-week validation (1 Jun&ndash;26 Jul), B / all</td><td>{{H2BASE_B}} / {{H2BASE_ALL}}</td><td>{{H2_B}} / {{H2_ALL}}</td></tr>
+<tr><td>12-week validation (4 May&ndash;26 Jul, same horizon as test), B / all</td><td>{{H12_0_B}} / {{H12_0_ALL}}</td><td>{{H12_2_B}} / {{H12_2_ALL}}</td></tr>
+<tr><td>Kaggle (weeks 31&ndash;42): private / public</td><td>0.25025 / 0.28799 (v1)</td><td><b>0.30404 / 0.33326 (v2, final)</b></td></tr></table>
+<div class="fig">Table 2. Effect of the airing prior on validation and on Kaggle.</div>
+<img class="shot" src="kaggle_submissions.webp">
+<div class="fig">Figure 1. Kaggle Submissions page (screenshot): v1 <code>submission.csv</code> scored 0.25025 private / 0.28799 public; the final designated submission <code>submission_v2_airprior.csv</code> (uploaded twice; the top entry carries the Russian name in its description) scored <b>0.30404 private / 0.33326 public</b>. The final file is in the repository.</div>
+<p><b>Verification.</b> (a) <code>apk</code> reproduces the worked example of the course slides [6] (0.917 and 0.533); (b) <code>09_unit_checks.py</code> asserts that training sessions end before the cutoff, validation sessions start after it, and targets lie inside the candidate pool; (c) CBF sanity check <code>08_cbf_sanity.py</code>: raising the show-identity weight to 100 lifts CBF to 0.279, almost the own-history level (0.284), so the CBF pipeline is correct and its weakness is a property of the metadata; (d) both submission files are checked against the template (1,260 users, 5 distinct programs each, all inside the weeks 31&ndash;42 schedule); outputs of all checks are committed (<code>unit_checks_output.txt</code>, <code>cbf_sanity_output.txt</code>). (e) <b>Manual checks by the student</b> (Figure 2): <i>Check A</i> &mdash; for user A (Hybrid v1, validation) the relevant programs are at ranks 1, 3, 4, 5 of 5 relevant, AP@5 = (1/1+2/3+3/4+4/5)/5 = 0.6433, equal to the code output; <i>Check B</i> &mdash; for one raw session (channel 3, 2020-04-10 16:48:21&ndash;17:16:54) the overlaps with the scheduled programs were computed by hand: 0 s (15:25&ndash;16:45), 1299 s (&ldquo;ТСН&rdquo;, 17:10:00&minus;16:48:21) and 414 s (&ldquo;Великолепный век&rdquo;, 17:16:54&minus;17:10:00); they equal the values stored by the pipeline, and 1299+414 = 1713 s equals the session length (28 min 33 s).</p>
+<table class="t"><tr><td style="width:50%"><img class="shot" src="handcheck_A_B.jpg"></td><td style="width:50%"><img class="shot" src="handcheck_B_cont.jpg"></td></tr></table>
+<div class="fig">Figure 2. Student&rsquo;s hand computations: Check A (AP@5) and Check B (log&ndash;schedule overlap), continued on the right.</div>
+
+<h2>5. Discussion</h2>
+<h3>5.1 Business and algorithmic analysis</h3>
+<p><b>Selected strategy for SWEET.TV: hybrid v2</b> &mdash; decayed own-history score + SVD collaborative signal + airing prior, with CBF kept out of the final blend (weight 0 was selected on half A). <b>Why (validation):</b> {{H2_ALL}} MAP@5 vs {{POP_ALL}} for popularity and {{SVD_ALL}} for the best required method; the gain of the airing prior is {{H2BASE_B}} &rarr; {{H2_B}} on B at 8 weeks and {{H12_0_B}} &rarr; {{H12_2_B}} at the 12-week horizon of the test. <b>Why (cost):</b> SVD fits in {{SVD_FIT}} s and ALS in {{ALS_FIT}} s on the 4.9k&times;9.7k matrix, and ranking 1,244 users takes well under a second per method (Table 1), so the model can be retrained after every schedule update; CBF needs item-attribute preprocessing but is cheap too. <b>Why (examples):</b> Table 3.</p>
+<p><b>Users.</b> We took the user closest to the median activity ({{N_MED}} distinct programs in training) as the typical case and the user closest to the 10th percentile ({{N_P10}} programs) as the light case; the rule is applied before looking at any recommendations, and the same two users are shown for every method.</p>
+{{CASE_HTML}}
+<div class="fig">Table 3. Top-5 of every method for the two users (ID, title, category; &#10003; = program in the validation top-5; &ldquo;[new]&rdquo; = not in the user&rsquo;s training history). AP@5 per method in the header.</div>
+<p><b>How and why the methods differ.</b> Popularity gives everyone the same national news/talk programs; it is right only when the user happens to watch them. CBF returns programs that are close to the profile in metadata (for both users all five are films, &ldquo;Фильмы&rdquo;), which gives novelty but zero hits: a profile averaged over 100&ndash;250 programs is dominated by broad categories, and the profile&ndash;item cosine of a generic film (0.455) exceeds that of the programs actually watched next (0.14&ndash;0.42) for one diagnosed validation user with 146 programs in history (<code>cbf_sanity_output.txt</code>). SVD reconstructs the user&rsquo;s own weighted history plus co-watched programs and so returns the habitual programs; ALS, tuned with a small confidence &alpha; and strong regularisation, smooths more towards globally popular programs (a likely, untested explanation of its lower score). The final hybrid ranks habitual programs first and uses the airing prior to prefer programs that are broadcast often. <b>Implication for UX:</b> the list is a precise &ldquo;continue your usual shows&rdquo; shelf with low novelty; a discovery shelf needs a separate objective because excluding already-watched programs drops every method below 0.01.</p>
+<p><b>Limitations and failure cases (supported by results).</b> (1) Personalisation vs exposure is a trade-off per user: for light user B the v1 hybrid scores AP@5 {{AP_LIGHT_H1}} (SVD {{AP_LIGHT_SVD}}) because it repeats training programs (&ldquo;МастерШеф&rdquo;, &ldquo;Холостяк&rdquo;) that are not in the validation top-5, and two of B&rsquo;s five targets are films B had not watched before; the airing prior lifts v2 to {{AP_LIGHT_H2}}, but for typical user A it lowers AP@5 from {{AP_TYP_H1}} to {{AP_TYP_H2}}. History cannot predict new programs at all, and they are 12.3% of all targets. (2) CBF fails on generic metadata (Table 1). (3) 47% of watch time is not matched to a relevant program (id&nbsp;0, channels without relevant IDs, short overlaps). (4) Targets are our own definition of &ldquo;most preferred&rdquo; (top-5 by watch time); the private Kaggle score of v1 (0.250) is below its validation value (0.288), while v2 gains much more on Kaggle (+0.054) than on validation (+0.009 at 8 weeks, +0.015 at 12 weeks), which we cannot fully explain. (5) One random user split, no confidence intervals; ALS/SVD hyper-parameter grids are small.</p>
+
+<h3>5.2&ndash;5.7 Reflection (Top-Down 5-Loop)</h3>
+<div class="todo"><b>TODO (student, own words):</b> failure case + root cause + fix and verification (detection &rarr; change &rarr; confirmation); what worked (2&ndash;3 bullets); what surprised you or did not work (2&ndash;3 bullets); one concrete next improvement.</div>
+
+<h2>6. AI Usage Disclosure</h2>
+<div class="todo"><b>TODO (student, own words):</b> AI tools and versions (Claude Code, model Claude Sonnet 5 / 5.5); how AI was used (code generation, debugging, experiment design, drafting); what you personally verified (hand-computed AP@5 for user A with Hybrid: hits at ranks 1,3,4,5 &rArr; (1/1+2/3+3/4+4/5)/5; one log line matched to the schedule by hand; slide-5 example), what you trusted without verification; session export reference.</div>
+
+<div class="ref"><h2>References</h2>
+<p>[1] Y. Hu, Y. Koren, and C. Volinsky, &ldquo;Collaborative filtering for implicit feedback datasets,&rdquo; in <i>Proc. 2008 Eighth IEEE Int. Conf. Data Mining</i>, 2008, pp. 263&ndash;272, doi: 10.1109/ICDM.2008.22. [Accessed: 2026-10-25].</p>
+<p>[2] P. Cremonesi, Y. Koren, and R. Turrin, &ldquo;Performance of recommender algorithms on top-N recommendation tasks,&rdquo; in <i>Proc. Fourth ACM Conf. Recommender Systems (RecSys '10)</i>, 2010, pp. 39&ndash;46, doi: 10.1145/1864708.1864721. [Accessed: 2026-10-25].</p>
+<p>[3] Y. Koren, R. Bell, and C. Volinsky, &ldquo;Matrix factorization techniques for recommender systems,&rdquo; <i>Computer</i>, vol. 42, no. 8, pp. 30&ndash;37, 2009, doi: 10.1109/MC.2009.263. [Accessed: 2026-10-25].</p>
+<p>[4] P. Lops, M. de Gemmis, and G. Semeraro, &ldquo;Content-based recommender systems: State of the art and trends,&rdquo; in <i>Recommender Systems Handbook</i>, Springer, 2010, pp. 73&ndash;105, doi: 10.1007/978-0-387-85820-3_3. [Accessed: 2026-10-25].</p>
+<p>[5] &ldquo;sweet.tv &ndash; TV program recommender,&rdquo; Kaggle community prediction competition. [Online]. Available: https://www.kaggle.com/competitions/sweettv-tv-program-recommender. [Accessed: 2026-10-25].</p>
+<p>[6] S. Jin, &ldquo;LLM4Rec &ndash; Midterm Quiz,&rdquo; course slides (MAP@K, slides 4&ndash;5), HSE University, 2026.</p>
+</div>
+</body></html>

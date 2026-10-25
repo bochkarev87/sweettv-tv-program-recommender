@@ -1,0 +1,49 @@
+PROTOCOL: train < 2020-06-01 | validation 2020-06-01 -> 2020-07-27
+eval users: 1244 (of 1260 ) | cold users (no train history): 7
+candidate pool size: 5732 | pool items seen in train: 2259
+truth items in pool: 1.000
+truth items already watched by that user in train (repeat viewing): 0.674
+truth items never seen in train by anyone (cold items): 0.123
+avg truth size per user: 5.00
+pop_all                                   excl_seen=False MAP@5 A=0.1600 B=0.1746 All=0.1673 HR@5=0.683
+pop_all                                   excl_seen=True  MAP@5 A=0.0109 B=0.0067 All=0.0088 HR@5=0.069
+pop_28d                                   excl_seen=False MAP@5 A=0.1616 B=0.1773 All=0.1694 HR@5=0.683
+pop_28d                                   excl_seen=True  MAP@5 A=0.0108 B=0.0047 All=0.0077 HR@5=0.057
+hist       half_life=None                 excl_seen=False MAP@5 A=0.2760 B=0.2842 All=0.2801 HR@5=0.816
+hist       half_life=None                 excl_seen=True  MAP@5 A=0.0109 B=0.0067 All=0.0088 HR@5=0.069
+hist       half_life=14                   excl_seen=False MAP@5 A=0.2432 B=0.2688 All=0.2560 HR@5=0.767
+hist       half_life=14                   excl_seen=True  MAP@5 A=0.0109 B=0.0067 All=0.0088 HR@5=0.069
+hist       half_life=28                   excl_seen=False MAP@5 A=0.2702 B=0.2910 All=0.2806 HR@5=0.804
+hist       half_life=28                   excl_seen=True  MAP@5 A=0.0109 B=0.0067 All=0.0088 HR@5=0.069
+hist       half_life=56                   excl_seen=False MAP@5 A=0.2779 B=0.2897 All=0.2838 HR@5=0.814
+hist       half_life=56                   excl_seen=True  MAP@5 A=0.0109 B=0.0067 All=0.0088 HR@5=0.069
+cbf        tfidf cat/genre/actor/dir/title/decade excl_seen=False MAP@5 A=0.0019 B=0.0026 All=0.0022 HR@5=0.019
+cbf        tfidf cat/genre/actor/dir/title/decade excl_seen=True  MAP@5 A=0.0009 B=0.0012 All=0.0010 HR@5=0.011
+als        k=32 alpha=1 reg=10 it=8       excl_seen=False MAP@5 A=0.0943 B=0.0994 All=0.0968 HR@5=0.526
+als        k=32 alpha=1 reg=10 it=8       excl_seen=True  MAP@5 A=0.0076 B=0.0050 All=0.0063 HR@5=0.053
+als        k=64 alpha=1 reg=30 it=8       excl_seen=False MAP@5 A=0.0879 B=0.0976 All=0.0928 HR@5=0.537
+als        k=64 alpha=1 reg=30 it=8       excl_seen=True  MAP@5 A=0.0080 B=0.0051 All=0.0065 HR@5=0.052
+als        k=64 alpha=0.5 reg=30 it=8     excl_seen=False MAP@5 A=0.1120 B=0.1228 All=0.1174 HR@5=0.613
+als        k=64 alpha=0.5 reg=30 it=8     excl_seen=True  MAP@5 A=0.0087 B=0.0047 All=0.0067 HR@5=0.056
+als        k=64 alpha=1 reg=10 it=8       excl_seen=False MAP@5 A=0.0675 B=0.0783 All=0.0729 HR@5=0.453
+als        k=64 alpha=1 reg=10 it=8       excl_seen=True  MAP@5 A=0.0078 B=0.0050 All=0.0064 HR@5=0.052
+als        k=128 alpha=1 reg=30 it=8      excl_seen=False MAP@5 A=0.0702 B=0.0863 All=0.0783 HR@5=0.476
+als        k=128 alpha=1 reg=30 it=8      excl_seen=True  MAP@5 A=0.0084 B=0.0056 All=0.0070 HR@5=0.053
+svd        rank=32                        excl_seen=False MAP@5 A=0.2340 B=0.2431 All=0.2385 HR@5=0.793
+svd        rank=32                        excl_seen=True  MAP@5 A=0.0096 B=0.0050 All=0.0073 HR@5=0.064
+svd        rank=64                        excl_seen=False MAP@5 A=0.2364 B=0.2490 All=0.2427 HR@5=0.805
+svd        rank=64                        excl_seen=True  MAP@5 A=0.0068 B=0.0050 All=0.0059 HR@5=0.052
+svd        rank=128                       excl_seen=False MAP@5 A=0.2406 B=0.2545 All=0.2476 HR@5=0.811
+svd        rank=128                       excl_seen=True  MAP@5 A=0.0044 B=0.0034 All=0.0039 HR@5=0.037
+
+selected on A -> hist: half_life=56 | MF: svd rank=128
+best hybrid on A: w_hist=2 w_mf=0.5 w_cbf=0 | MAP@5 A=0.2809 B=0.2949 All=0.2879
+
+=== SUMMARY (exclude_seen=False; params selected on A; MAP@5 on held-out B and on All) ===
+pop_all                                     B=0.1746 All=0.1673 HR@5=0.683 P@5=0.226 fit_s=0.0 pred_s=0.08
+pop_28d                                     B=0.1773 All=0.1694 HR@5=0.683 P@5=0.226 fit_s=0.0 pred_s=0.08
+hist     half_life=56                       B=0.2897 All=0.2838 HR@5=0.814 P@5=0.349 fit_s=0.0 pred_s=0.72
+cbf      tfidf cat/genre/actor/dir/title/decade B=0.0026 All=0.0022 HR@5=0.019 P@5=0.004 fit_s=0.0 pred_s=0.65
+als      k=64 alpha=0.5 reg=30 it=8         B=0.1228 All=0.1174 HR@5=0.613 P@5=0.182 fit_s=5.0 pred_s=0.16
+svd      rank=128                           B=0.2545 All=0.2476 HR@5=0.811 P@5=0.318 fit_s=0.6 pred_s=0.15
+hybrid   w_hist=2 w_mf=0.5 w_cbf=0          B=0.2949 All=0.2879 HR@5=0.828 P@5=0.352 fit_s=0.0 pred_s=0.14

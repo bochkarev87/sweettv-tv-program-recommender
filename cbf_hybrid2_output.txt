@@ -1,0 +1,26 @@
+PROTOCOL: train < 2020-06-01 | validation 2020-06-01 -> 2020-07-27
+eval users: 1244 (of 1260 ) | cold users (no train history): 7
+candidate pool size: 5732 | pool items seen in train: 2259
+truth items in pool: 1.000
+truth items already watched by that user in train (repeat viewing): 0.674
+truth items never seen in train by anyone (cold items): 0.123
+avg truth size per user: 5.00
+cbf2       cat+genre                      excl_seen=False MAP@5 A=0.0008 B=0.0011 All=0.0009 HR@5=0.011
+cbf2       cat+genre+title                excl_seen=False MAP@5 A=0.0026 B=0.0039 All=0.0033 HR@5=0.021
+cbf2       all blocks (03 default)        excl_seen=False MAP@5 A=0.0019 B=0.0026 All=0.0022 HR@5=0.019
+cbf2       cat+genre + id1                excl_seen=False MAP@5 A=0.0017 B=0.0025 All=0.0021 HR@5=0.013
+cbf2       all + id0.5                    excl_seen=False MAP@5 A=0.0021 B=0.0031 All=0.0026 HR@5=0.019
+cbf2       all + id1                      excl_seen=False MAP@5 A=0.0030 B=0.0031 All=0.0031 HR@5=0.021
+cbf2       all + id2                      excl_seen=False MAP@5 A=0.0039 B=0.0045 All=0.0042 HR@5=0.031
+
+best CBF on A: all + id2 | B=0.0045 All=0.0042
+
+top-5 hybrid2 configs by A:
+                      params  MAP@5_A  MAP@5_B  MAP@5_All  HR@5_All  P@5_All
+   w_hist=2 w_mf=0.5 w_cbf=0   0.2809   0.2949     0.2879    0.8280   0.3518
+w_hist=2 w_mf=0.5 w_cbf=0.25   0.2808   0.2931     0.2869    0.8296   0.3514
+ w_hist=2 w_mf=0.5 w_cbf=0.5   0.2790   0.2914     0.2852    0.8248   0.3500
+     w_hist=2 w_mf=1 w_cbf=0   0.2789   0.2903     0.2846    0.8344   0.3508
+   w_hist=1 w_mf=0.5 w_cbf=0   0.2789   0.2903     0.2846    0.8344   0.3508
+
+selected: {'cbf': 'all + id2', 'w_hist': 2.0, 'w_mf': 0.5, 'w_cbf': 0.0}
